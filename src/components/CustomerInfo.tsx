@@ -21,7 +21,7 @@ const CustomerInfo = () => {
           <User className="w-5 h-5 text-primary mt-0.5" />
           <div>
             <p className="text-sm text-muted-foreground">Customer Name</p>
-            <p className="font-medium text-foreground">John Doe</p>
+            <p className="font-medium text-foreground">NEETU SOOD</p>
           </div>
         </div>
         

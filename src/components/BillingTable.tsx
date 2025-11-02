@@ -1,22 +1,26 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/utils";
 
-interface BillingItem {
+export interface BillingItem {
   id: string;
   name: string;
   quantity: number;
   price: number;
 }
 
+// Shared sample billing items (source of truth for table + totals)
+export const billingItems: BillingItem[] = [
+  { id: "RFID-001", name: "Organic Milk (1L)", quantity: 2, price: 60 },
+  { id: "RFID-002", name: "Whole Wheat Bread", quantity: 1, price: 50 },
+  { id: "RFID-003", name: "Fresh Bananas (1kg)", quantity: 3, price: 150 },
+  { id: "RFID-004", name: "Greek Yogurt", quantity: 2, price: 30 },
+  { id: "RFID-005", name: "Orange Juice (2L)", quantity: 1, price: 200 },
+];
+
 const BillingTable = () => {
-  const items: BillingItem[] = [
-    { id: "RFID-001", name: "Organic Milk (1L)", quantity: 2, price: 3.99 },
-    { id: "RFID-002", name: "Whole Wheat Bread", quantity: 1, price: 2.49 },
-    { id: "RFID-003", name: "Fresh Bananas (1kg)", quantity: 3, price: 1.99 },
-    { id: "RFID-004", name: "Greek Yogurt", quantity: 2, price: 4.29 },
-    { id: "RFID-005", name: "Orange Juice (2L)", quantity: 1, price: 5.99 },
-  ];
+  const items = billingItems;
 
   return (
     <Card className="p-6 shadow-lg animate-slide-up">
@@ -53,10 +57,10 @@ const BillingTable = () => {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
-                  ${item.price.toFixed(2)}
+                  {formatCurrency(item.price)}
                 </TableCell>
                 <TableCell className="text-right font-semibold text-foreground">
-                  ${(item.quantity * item.price).toFixed(2)}
+                  {formatCurrency(item.quantity * item.price)}
                 </TableCell>
               </TableRow>
             ))}
