@@ -1,5 +1,5 @@
 import { ShoppingCart } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 const Header = () => {
   return (
@@ -16,30 +16,40 @@ const Header = () => {
           </Link>
           
           <nav className="hidden md:flex items-center gap-8">
-            <Link 
-              to="/" 
-              className="text-foreground font-medium hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full"
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                [
+                  "text-foreground font-medium transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-primary after:transition-all",
+                  isActive ? "text-primary after:w-full" : "hover:text-primary after:w-0 hover:after:w-full",
+                ].join(" ")
+              }
             >
               Home
-            </Link>
-            <Link 
-              to="/" 
-              className="text-primary font-medium relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-primary"
+            </NavLink>
+            <NavLink
+              to="/cart"
+              className={({ isActive }) =>
+                [
+                  "text-foreground font-medium transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-primary after:transition-all",
+                  isActive ? "text-primary after:w-full" : "hover:text-primary after:w-0 hover:after:w-full",
+                ].join(" ")
+              }
             >
               Cart
-            </Link>
-            <Link 
-              to="/" 
+            </NavLink>
+            <a
+              href="#about"
               className="text-foreground font-medium hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full"
             >
               About
-            </Link>
-            <Link 
-              to="/" 
+            </a>
+            <a
+              href="#contact"
               className="text-foreground font-medium hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full"
             >
               Contact
-            </Link>
+            </a>
           </nav>
         </div>
       </div>

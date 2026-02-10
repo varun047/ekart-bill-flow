@@ -10,63 +10,64 @@ export interface BillingItem {
   price: number;
 }
 
-// Shared sample billing items (source of truth for table + totals)
-export const billingItems: BillingItem[] = [
-  { id: "RFID-001", name: "Organic Milk (1L)", quantity: 2, price: 60 },
-  { id: "RFID-002", name: "Whole Wheat Bread", quantity: 1, price: 50 },
-  { id: "RFID-003", name: "Fresh Bananas (1kg)", quantity: 3, price: 150 },
-  { id: "RFID-004", name: "Greek Yogurt", quantity: 2, price: 30 },
-  { id: "RFID-005", name: "Orange Juice (2L)", quantity: 1, price: 200 },
-];
+interface BillingTableProps {
+  items: BillingItem[];
+}
 
-const BillingTable = () => {
-  const items = billingItems;
+const BillingTable = ({ items }: BillingTableProps) => {
+  const hasItems = items.length > 0;
 
   return (
     <Card className="p-6 shadow-lg animate-slide-up">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-semibold text-foreground">Shopping Cart Items</h2>
         <Badge variant="secondary" className="px-4 py-1 text-sm">
-          {items.length} items
+          {items.length} item{items.length === 1 ? "" : "s"}
         </Badge>
       </div>
-      
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-b-2">
-              <TableHead className="font-semibold text-foreground">Item ID</TableHead>
-              <TableHead className="font-semibold text-foreground">Product Name</TableHead>
-              <TableHead className="text-center font-semibold text-foreground">Quantity</TableHead>
-              <TableHead className="text-right font-semibold text-foreground">Price/Item</TableHead>
-              <TableHead className="text-right font-semibold text-foreground">Total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((item, index) => (
-              <TableRow 
-                key={item.id} 
-                className="hover:bg-muted/50 transition-colors animate-slide-in"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <TableCell className="font-mono text-sm text-muted-foreground">{item.id}</TableCell>
-                <TableCell className="font-medium text-foreground">{item.name}</TableCell>
-                <TableCell className="text-center">
-                  <Badge variant="outline" className="font-medium">
-                    {item.quantity}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right text-muted-foreground">
-                  {formatCurrency(item.price)}
-                </TableCell>
-                <TableCell className="text-right font-semibold text-foreground">
-                  {formatCurrency(item.quantity * item.price)}
-                </TableCell>
+
+      {!hasItems ? (
+        <p className="text-sm text-muted-foreground">
+          No items in your bill yet. Add items from the store or pickup flow to see them here.
+        </p>
+      ) : (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-b-2">
+                <TableHead className="font-semibold text-foreground">Item ID</TableHead>
+                <TableHead className="font-semibold text-foreground">Product Name</TableHead>
+                <TableHead className="text-center font-semibold text-foreground">Quantity</TableHead>
+                <TableHead className="text-right font-semibold text-foreground">Price/Item</TableHead>
+                <TableHead className="text-right font-semibold text-foreground">Total</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {items.map((item, index) => (
+                <TableRow
+                  key={item.id}
+                  className="hover:bg-muted/50 transition-colors animate-slide-in"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  <TableCell className="font-mono text-sm text-muted-foreground">{item.id}</TableCell>
+                  <TableCell className="font-medium text-foreground">{item.name}</TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="outline" className="font-medium">
+                      {item.quantity}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {formatCurrency(item.price)}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold text-foreground">
+                    {formatCurrency(item.quantity * item.price)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </Card>
   );
 };
