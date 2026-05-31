@@ -95,14 +95,70 @@ const Index = () => {
       const json = await response.json();
       
       if (json.status === "success") {
-        const cloudData: RawCloudItem[] = json.data || [];
+        const rawData: any[] = json.data || [];
+        
+        // Map raw items to standardized structure based on the updated spreadsheet layout:
+        // Spreadsheet Schema: [Timestamp, UID, Product Name, Price]
+        const cloudData: RawCloudItem[] = rawData.map((scan: any): RawCloudItem | null => {
+          if (!scan) return null;
+
+          // Case A: Generic spreadsheet parser returning arrays
+          if (Array.isArray(scan)) {
+            if (scan[0]?.toString().toLowerCase() === "timestamp") return null;
+            return {
+              timestamp: scan[0]?.toString() || "",
+              uid: scan[1]?.toString().trim() || "",
+              productName: scan[2]?.toString().trim() || "Unknown Product",
+              price: parseFloat(scan[3]) || 0.0
+            };
+          }
+
+          // Case B: Objects. Look for matching keys dynamically
+          const findKey = (obj: any, keys: string[]): any => {
+            const foundKey = Object.keys(obj).find(k => 
+              keys.some(key => k.toLowerCase().replace(/[^a-z0-9]/g, "") === key.toLowerCase().replace(/[^a-z0-9]/g, ""))
+            );
+            return foundKey ? obj[foundKey] : undefined;
+          };
+
+          const rawUid = findKey(scan, ["uid", "id", "taguid"])?.toString().trim() || "";
+          const rawProductName = findKey(scan, ["productname", "product", "itemname", "name"])?.toString().trim() || "";
+          const rawPrice = parseFloat(findKey(scan, ["price", "cost", "amount", "rate"])) || 0.0;
+          const rawTimestamp = findKey(scan, ["timestamp", "time", "date"])?.toString() || "";
+
+          // Auto-detect shifts from an un-updated Google Apps Script:
+          // If the un-updated script is used with the new spreadsheet layout (Timestamp, UID, Product Name, Price),
+          // Column 1 (Timestamp) is mapped to 'uid', Column 2 (UID) to 'productName',
+          // Column 3 (Product Name) to 'price', and Column 4 (Price) to 'timestamp'.
+          const isTimestampInUid = rawUid.includes("-") || rawUid.includes(":") || rawUid.length > 12;
+          
+          if (isTimestampInUid) {
+            const realTimestamp = rawUid;
+            const realUid = rawProductName;
+            const realProductName = scan.price ? scan.price.toString().trim() : "Unknown Product";
+            const realPrice = parseFloat(scan.timestamp) || 0.0;
+
+            return {
+              timestamp: realTimestamp,
+              uid: realUid,
+              productName: realProductName,
+              price: realPrice
+            };
+          }
+
+          return {
+            timestamp: rawTimestamp,
+            uid: rawUid,
+            productName: rawProductName || "Unknown Product",
+            price: rawPrice
+          };
+        }).filter((item): item is RawCloudItem => item !== null && !!item.uid);
+
         setRawScans(cloudData);
         setLastSyncTime(new Date());
         setSyncStatus("connected");
 
         // Process and group the items
-        // Google Sheet returns raw scans: UID, Product Name, Price, Timestamp
-        // We group by UID (or name) to aggregate quantity and price
         const grouped = cloudData.reduce((acc: Record<string, BillingItem>, scan) => {
           const uid = scan.uid.trim();
           const name = scan.productName.trim();
@@ -441,7 +497,11 @@ const Index = () => {
             <TotalsSummary items={items} />
             
             {/* Pay Operations */}
-            <PaymentActions />
+            <PaymentActions
+              items={items}
+              cartId={state.cartCode || (apiUrl ? "CART-LIVE" : "CART-OFFLINE")}
+              customerName="NEETU SOOD"
+            />
           </div>
         </div>
       </main>

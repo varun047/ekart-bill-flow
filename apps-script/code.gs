@@ -9,9 +9,9 @@
  * Deployment URL structure:
  * https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
  * 
- * Spreadsheet Column Layout:
- * | Column A (0) | Column B (1) | Column C (2)   | Column D (3) |
- * | Timestamp    | UID          | Product Name   | Price        |
+ * Spreadsheet Column Layout (Original):
+ * | Column A (0) | Column B (1) | Column C (2) | Column D (3) |
+ * | UID          | Product Name | Price        | Timestamp    |
  */
 
 function doGet(e) {
@@ -44,17 +44,17 @@ function doGet(e) {
         }, 400);
       }
 
-      // Append row to sheet: Timestamp, UID, Product Name, Price
-      sheet.appendRow([formattedTimestamp, uid, product, price]);
+      // Append row to sheet: UID, Product Name, Price, Timestamp
+      sheet.appendRow([uid, product, price, formattedTimestamp]);
 
       return createJsonResponse({
         "status": "success",
         "message": "Item added successfully",
         "data": {
-          "timestamp": formattedTimestamp,
           "uid": uid,
           "product": product,
-          "price": price
+          "price": price,
+          "timestamp": formattedTimestamp
         }
       });
     }
@@ -82,18 +82,18 @@ function doGet(e) {
     // Check if sheet contains rows besides header
     if (values.length > 1) {
       // Columns index mapping:
-      // Row 1 represents headers: [Timestamp, UID, Product Name, Price]
+      // Row 1 represents headers: [UID, Product Name, Price, Timestamp]
       for (var i = 1; i < values.length; i++) {
         var row = values[i];
         
         // Skip empty rows if any
-        if (!row[0] && !row[1] && !row[2]) continue;
+        if (!row[0] && !row[1]) continue;
 
         items.push({
-          "timestamp": row[0] ? row[0].toString() : "",
-          "uid": row[1] ? row[1].toString().trim() : "",
-          "productName": row[2] ? row[2].toString().trim() : "Unknown Product",
-          "price": parseFloat(row[3]) || 0.0
+          "uid": row[0] ? row[0].toString().trim() : "",
+          "productName": row[1] ? row[1].toString().trim() : "Unknown Product",
+          "price": parseFloat(row[2]) || 0.0,
+          "timestamp": row[3] ? row[3].toString() : ""
         });
       }
     }
@@ -127,6 +127,6 @@ function createJsonResponse(responseObj, statusCode) {
 function setupSheet() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["Timestamp", "UID", "Product Name", "Price"]);
+    sheet.appendRow(["UID", "Product Name", "Price", "Timestamp"]);
   }
 }
