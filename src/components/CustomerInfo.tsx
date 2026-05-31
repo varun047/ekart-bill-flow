@@ -1,7 +1,13 @@
 import { User, CreditCard, Calendar, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
-const CustomerInfo = () => {
+interface CustomerInfoProps {
+  cartId?: string;
+  itemCount: number;
+  customerName?: string;
+}
+
+const CustomerInfo = ({ cartId = "CART-2847", itemCount, customerName = "NEETU SOOD" }: CustomerInfoProps) => {
   const currentDate = new Date().toLocaleDateString('en-US', { 
     year: 'numeric', 
     month: 'long', 
@@ -21,7 +27,7 @@ const CustomerInfo = () => {
           <User className="w-5 h-5 text-primary mt-0.5" />
           <div>
             <p className="text-sm text-muted-foreground">Customer Name</p>
-            <p className="font-medium text-foreground">NEETU SOOD</p>
+            <p className="font-medium text-foreground">{customerName}</p>
           </div>
         </div>
         
@@ -29,7 +35,7 @@ const CustomerInfo = () => {
           <CreditCard className="w-5 h-5 text-primary mt-0.5" />
           <div>
             <p className="text-sm text-muted-foreground">Cart ID</p>
-            <p className="font-medium text-foreground font-mono">CART-2847</p>
+            <p className="font-medium text-foreground font-mono">{cartId}</p>
           </div>
         </div>
         
@@ -53,7 +59,7 @@ const CustomerInfo = () => {
       <div className="pt-4 border-t border-border">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Items in Cart</span>
-          <span className="font-semibold text-lg text-primary">5</span>
+          <span className="font-semibold text-lg text-primary">{itemCount}</span>
         </div>
       </div>
     </Card>
