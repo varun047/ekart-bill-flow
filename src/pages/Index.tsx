@@ -35,9 +35,9 @@ interface RawCloudItem {
 }
 
 const PRODUCT_LOOKUP: Record<string, { name: string; price: number }> = {
-  "A1B2C3": { name: "Milk", price: 55 },
-  "D4E5F6": { name: "Bread", price: 40 },
-  "G7H8I9": { name: "Rice", price: 120 }
+  "8349B0EC": { name: "Milk", price: 55 },
+  "136D9DFC": { name: "Bread", price: 40 },
+  "467A0001": { name: "Rice", price: 120 }
 };
 
 const parsePrice = (price: string | number): number => {
