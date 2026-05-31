@@ -109,7 +109,7 @@ Follow these exact steps to deploy the cloud database backend:
 1. **Create Google Sheet**:
    * Open your web browser and navigate to [Google Sheets](https://sheets.google.com).
    * Create a new spreadsheet and title it `Smart_Cart_Database`.
-   * Add headers in Row 1: **A1**: `UID`, **B1**: `Product Name`, **C1**: `Price`, **D1**: `Timestamp`.
+   * Add headers in Row 1: **A1**: `Timestamp`, **B1**: `UID`, **C1**: `Product Name`, **D1**: `Price`.
    
 2. **Open Apps Script Editor**:
    * In the top menu bar, go to **Extensions** -> **Apps Script**.
