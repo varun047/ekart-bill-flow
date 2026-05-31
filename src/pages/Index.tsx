@@ -34,6 +34,12 @@ interface RawCloudItem {
   timestamp: string;
 }
 
+const PRODUCT_LOOKUP: Record<string, { name: string; price: number }> = {
+  "A1B2C3": { name: "Milk", price: 55 },
+  "D4E5F6": { name: "Bread", price: 40 },
+  "G7H8I9": { name: "Rice", price: 120 }
+};
+
 const parsePrice = (price: string | number): number => {
   if (typeof price === "number") return price;
   const numeric = price.replace(/[^\d.]/g, "");
@@ -102,56 +108,71 @@ const Index = () => {
         const cloudData: RawCloudItem[] = rawData.map((scan: any): RawCloudItem | null => {
           if (!scan) return null;
 
+          let timestamp = "";
+          let uid = "";
+          let productName = "";
+          let price = 0.0;
+
           // Case A: Generic spreadsheet parser returning arrays
           if (Array.isArray(scan)) {
             if (scan[0]?.toString().toLowerCase() === "timestamp") return null;
-            return {
-              timestamp: scan[0]?.toString() || "",
-              uid: scan[1]?.toString().trim() || "",
-              productName: scan[2]?.toString().trim() || "Unknown Product",
-              price: parseFloat(scan[3]) || 0.0
+            timestamp = scan[0]?.toString() || "";
+            uid = scan[1]?.toString().trim() || "";
+            productName = scan[2]?.toString().trim() || "";
+            price = parseFloat(scan[3]) || 0.0;
+          } else {
+            // Case B: Objects. Look for matching keys dynamically
+            const findKey = (obj: any, keys: string[]): any => {
+              const foundKey = Object.keys(obj).find(k => 
+                keys.some(key => k.toLowerCase().replace(/[^a-z0-9]/g, "") === key.toLowerCase().replace(/[^a-z0-9]/g, ""))
+              );
+              return foundKey ? obj[foundKey] : undefined;
             };
+
+            const rawUid = findKey(scan, ["uid", "id", "taguid"])?.toString().trim() || "";
+            const rawProductName = findKey(scan, ["productname", "product", "itemname", "name"])?.toString().trim() || "";
+            const rawPrice = parseFloat(findKey(scan, ["price", "cost", "amount", "rate"])) || 0.0;
+            const rawTimestamp = findKey(scan, ["timestamp", "time", "date"])?.toString() || "";
+
+            // Auto-detect shifts from an un-updated Google Apps Script:
+            // If the un-updated script is used with the new spreadsheet layout (Timestamp, UID, Product Name, Price),
+            // Column 1 (Timestamp) is mapped to 'uid', Column 2 (UID) to 'productName',
+            // Column 3 (Product Name) to 'price', and Column 4 (Price) to 'timestamp'.
+            const isTimestampInUid = rawUid.includes("-") || rawUid.includes(":") || rawUid.length > 12;
+            
+            if (isTimestampInUid) {
+              timestamp = rawUid;
+              uid = rawProductName;
+              // scan.price holds the third column (Product Name) as a string on the sheet,
+              // but the un-updated Apps Script parses it to float, which makes it 0 or NaN.
+              // So we set it to empty and let the local lookup resolve the name.
+              productName = "";
+              price = parseFloat(scan.timestamp) || 0.0;
+            } else {
+              timestamp = rawTimestamp;
+              uid = rawUid;
+              productName = rawProductName;
+              price = rawPrice;
+            }
           }
 
-          // Case B: Objects. Look for matching keys dynamically
-          const findKey = (obj: any, keys: string[]): any => {
-            const foundKey = Object.keys(obj).find(k => 
-              keys.some(key => k.toLowerCase().replace(/[^a-z0-9]/g, "") === key.toLowerCase().replace(/[^a-z0-9]/g, ""))
-            );
-            return foundKey ? obj[foundKey] : undefined;
-          };
-
-          const rawUid = findKey(scan, ["uid", "id", "taguid"])?.toString().trim() || "";
-          const rawProductName = findKey(scan, ["productname", "product", "itemname", "name"])?.toString().trim() || "";
-          const rawPrice = parseFloat(findKey(scan, ["price", "cost", "amount", "rate"])) || 0.0;
-          const rawTimestamp = findKey(scan, ["timestamp", "time", "date"])?.toString() || "";
-
-          // Auto-detect shifts from an un-updated Google Apps Script:
-          // If the un-updated script is used with the new spreadsheet layout (Timestamp, UID, Product Name, Price),
-          // Column 1 (Timestamp) is mapped to 'uid', Column 2 (UID) to 'productName',
-          // Column 3 (Product Name) to 'price', and Column 4 (Price) to 'timestamp'.
-          const isTimestampInUid = rawUid.includes("-") || rawUid.includes(":") || rawUid.length > 12;
-          
-          if (isTimestampInUid) {
-            const realTimestamp = rawUid;
-            const realUid = rawProductName;
-            const realProductName = scan.price ? scan.price.toString().trim() : "Unknown Product";
-            const realPrice = parseFloat(scan.timestamp) || 0.0;
-
-            return {
-              timestamp: realTimestamp,
-              uid: realUid,
-              productName: realProductName,
-              price: realPrice
-            };
+          // Apply local database backup lookup for "Unknown Product" or zero-price entries
+          const normalizedUid = uid.toUpperCase().replace(/[^A-Z0-9]/g, "");
+          const localMatch = PRODUCT_LOOKUP[normalizedUid];
+          if (localMatch) {
+            if (!productName || productName === "Unknown Product" || productName === "0" || productName === "NaN") {
+              productName = localMatch.name;
+            }
+            if (!price || isNaN(price)) {
+              price = localMatch.price;
+            }
+          } else {
+            if (!productName) {
+              productName = "Unknown Product";
+            }
           }
 
-          return {
-            timestamp: rawTimestamp,
-            uid: rawUid,
-            productName: rawProductName || "Unknown Product",
-            price: rawPrice
-          };
+          return { timestamp, uid, productName, price };
         }).filter((item): item is RawCloudItem => item !== null && !!item.uid);
 
         setRawScans(cloudData);
